@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Microsoft 365 Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f0f4fa 0%, #e6f0ff 100%);
+      overflow-x: hidden;
+      color: #262626;
+    }
+    /* Header styling improvements */
+    .header {
+      background: white;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      padding: 8px 24px;
+      gap: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header h1 {
+      color: #0078d4;
+      font-size: 22px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-right: 24px;
+    }
+    .header h1::before {
+      content: '';
+      display: inline-block;
+      width: 26px;
+      height: 26px;
+      background-image: url('https://img.icons8.com/fluency/48/microsoft-365.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+    /* Search container and bar */
+    .search-container {
+      max-width: 600px;
+      width: 100%;
+      margin: 0 16px;
+    }
+    .search-bar {
+      position: relative;
+      width: 100%;
+    }
+    .search-bar input {
+      width: 100%;
+      padding: 10px 40px 10px 16px;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      background-color: #f5f5f7;
+    }
+    .search-bar input:focus {
+      outline: none;
+      border-color: #0078d4;
+      box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+      background-color: white;
+    }
+    .search-button {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+    .search-button img {
+      width: 18px;
+      height: 18px;
+      opacity: 0.6;
+    }
+    /* Top icons section */
+    .top-icons {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+    .top-icons img {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+    }
+    .top-icons img:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      overflow: hidden;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+    .user-avatar:hover {
+      border-color: #0078d4;
+      transform: scale(1.05);
+    }
+    .user-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    /* Waffle menu */
+    .waffle-menu {
+      display: grid;
+      grid-template-columns: repeat(3, 5px);
+      grid-gap: 3px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      transition: background 0.2s ease;
+    }
+    .waffle-menu:hover {
+      background: #f0f0f0;
+    }
+    .waffle-menu span {
+      width: 5px;
+      height: 5px;
+      background: #555;
+      border-radius: 1px;
+      transition: background 0.2s ease;
+    }
+    .waffle-menu:hover span {
+      background: #0078d4;
+    }
+    /* Popups styling */
+    .apps-popup, .account-popup {
+      position: absolute;
+      top: 56px;
+      right: 0;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+      display: none;
+      flex-direction: column;
+      z-index: 999;
+      border: 1px solid #eaeaea;
+      animation: fadeIn 0.2s ease;
+      overflow: hidden;
+    }
+    .apps-popup {
+      right: 50px;
+      width: 320px;
+      padding: 16px;
+    }
+    .popup-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    /* Apps grid */
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-gap: 12px;
+      width: 100%;
+    }
+    .app-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 8px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .app-tile:hover {
+      background: #f5f9fe;
+      transform: translateY(-2px);
+    }
+    .app-tile img {
+      width: 28px;
+      height: 28px;
+      margin-bottom: 8px;
+      transition: transform 0.2s ease;
+    }
+    .app-tile:hover img {
+      transform: scale(1.1);
+    }
+    .app-tile span {
+      font-size: 12px;
+      color: #444;
+      text-align: center;
+    }
+    .all-apps {
+      background: #f6f9fc;
+    }
+    /* Account popup */
+    .account-popup {
+      width: 280px;
+      padding: 0;
+      right: 0;
+    }
+    .account-info {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      background: #f7f9fc;
+      border-bottom: 1px solid #eaeaea;
+    }
+    .account-info img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 12px;
+    }
+    .user-details {
+      flex: 1;
+    }
+    .user-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+    }
+    .user-email {
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+    }
+    .account-actions {
+      display: flex;
+      flex-direction: column;
+    }
+    .account-action {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: #333;
+      transition: background 0.2s ease;
+    }
+    .account-action:hover {
+      background: #f5f9fe;
+    }
+    .account-action img {
+      width: 18px;
+      height: 18px;
+      margin-right: 12px;
+      opacity: 0.7;
+    }
+    .account-action span {
+      font-size: 14px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .account-popup, .apps-popup {
+      position: absolute;
+      top: 48px;
+      right: 0;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: none;
+      flex-direction: column;
+      z-index: 999;
+      min-width: 180px;
+      padding: 8px 0;
+      border: 1px solid #eaeaea;
+    }
+    .apps-popup { 
+      right: 50px; 
+      width: 280px;
+      padding: 12px;
+    }
+    .account-popup a {
+      padding: 10px 16px;
+      font-size: 14px;
+      text-decoration: none;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .account-popup a:hover {
+      background: #f3f3f3;
+    }
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-gap: 12px;
+      width: 100%;
+    }
+    .app-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px;
+      border-radius: 4px;
+      transition: background 0.2s ease;
+      cursor: pointer;
+    }
+    .app-tile:hover {
+      background: #f3f3f3;
+    }
+    .app-tile img {
+      width: 24px;
+      height: 24px;
+      margin-bottom: 4px;
+      margin-left: 0;
+    }
+    .app-tile span {
+      font-size: 12px;
+      color: #555;
+      text-align: center;
+    }
+    .main {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .top-bar {
+      width: 100%;
+      max-width: 900px;
+      margin-bottom: 28px;
+      position: relative;
+    }
+    .search-bar {
+      position: relative;
+    }
+    .search-bar input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      border-radius: 4px;
+      border: 1px solid #d1d1d1;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      background-color: white;
+    }
+    .search-bar input:focus {
+      outline: none;
+      border-color: #0078d4;
+      box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+    }
+    .search-bar::before {
+      content: '';
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      background-image: url('https://img.icons8.com/material-outlined/24/search.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      opacity: 0.6;
+    }
+    .app-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+      width: 100%;
+      max-width: 900px;
+    }
+    .app-icon {
+      width: 90px;
+      height: 90px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+      border: 1px solid #f0f0f0;
+    }
+    .app-icon:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .app-icon img {
+      width: 32px;
+      height: 32px;
+      margin-bottom: 8px;
+    }
+    .app-icon .arrow {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: #0078d4;
+      color: white;
+      font-size: 8px;
+      padding: 2px 4px;
+      border-radius: 2px;
+    }
+    .popup {
+      position: absolute;
+      bottom: -130px;
+      left: 0;
+      width: 180px;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: none;
+      flex-direction: column;
+      z-index: 100;
+      border: 1px solid #eaeaea;
+    }
+    .popup a {
+      padding: 8px 12px;
+      text-decoration: none;
+      font-size: 13px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .popup a:hover { background: #f5f9fe; }
+    .section { 
+      max-width: 900px; 
+      margin-bottom: 32px; 
+      width: 100%; 
+    }
+    .section h2 { 
+      font-size: 18px; 
+      margin-bottom: 16px; 
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #292929;
+    }
+    
+    .section h2::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background: #0078d4;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    
+    .widgets {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      width: 100%;
+    }
+    
+    .widget-box {
+      position: relative;
+      height: 160px;
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 16px;
+      transition: all 0.3s ease;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-width: none;
+      border: 1px solid #f0f0f0;
+    }
+    
+    .widget-box:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 20px rgba(0,0,0,0.12);
+    }
+    
+    .widget-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    
+    .widget-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .widget-title img {
+      width: 24px;
+      height: 24px;
+    }
+    
+    .widget-content {
+      flex: 1;
+      font-size: 13px;
+    }
+    
+    .meeting-item, .email-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .meeting-time, .email-time {
+      color: #0078d4;
+      font-weight: 600;
+      margin-right: 12px;
+      min-width: 50px;
+    }
+    
+    .widget-box.calendar {
+      background: linear-gradient(to bottom right, #ffffff, #f0f8ff);
+      border-left: 4px solid #0078d4;
+    }
+    
+    .widget-box.email {
+      background: linear-gradient(to bottom right, #ffffff, #f0fff0);
+      border-left: 4px solid #107c10;
+    }
+    
+    .widget-box.add {
+      border: 2px dashed #ccc;
+      color: #888;
+      background: rgba(255,255,255,0.7);
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    
+    .widget-box.add:hover {
+      border-color: #0078d4;
+      color: #0078d4;
+      background: rgba(240,248,255,0.7);
+    }
+    
+    .badge {
+      background: #0078d4;
+      color: white;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+    
+    .recommended {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      width: 100%;
+    }
+    
+    .file-box {
+      background: white;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      border: 1px solid #f0f0f0;
+      height: auto;
+      max-width: none;
+      cursor: pointer;
+    }
+    
+    .file-box:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+    }
+    
+    .file-header {
+      height: 120px;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .file-icon {
+      width: 48px;
+      height: 48px;
+    }
+    
+    .file-info {
+      padding: 12px;
+    }
+    
+    .file-name {
+      font-weight: 500;
+      font-size: 14px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .file-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #666;
+    }
+    .user-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .apps-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .right-side-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Microsoft 365</h1>
+    <div class="search-container">
+      <div class="search-bar">
+        <input type="text" placeholder="Search in Microsoft 365">
+        <button class="search-button">
+          <img src="https://img.icons8.com/material-outlined/24/search.png" alt="Search">
+        </button>
+      </div>
+    </div>
+    <div class="right-side-controls">
+      <div class="apps-container">
+        <div class="waffle-menu" onclick="toggleAppsPopup(event)" title="Apps">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+        <div class="apps-popup" id="appsPopup">
+          <h3 class="popup-title">Apps</h3>
+          <div class="apps-grid">
+            <div class="app-tile">
+              <img src="https://img.icons8.com/fluency/48/microsoft-teams-2019.png" alt="Teams"/>
+              <span>Teams</span>
+            </div>
+            <div class="app-tile">
+              <img src="https://img.icons8.com/fluency/48/microsoft-sharepoint-2019.png" alt="SharePoint"/>
+              <span>SharePoint</span>
+            </div>
+            <div class="app-tile">
+              <img src="https://img.icons8.com/fluency/48/microsoft-onedrive-2019.png" alt="OneDrive"/>
+              <span>OneDrive</span>
+            </div>
+            <div class="app-tile">
+              <img src="https://img.icons8.com/fluency/48/canvas-student.png" alt="Canvas"/>
+              <span>Canvas</span>
+            </div>
+            <div class="app-tile">
+              <img src="https://img.icons8.com/fluency/48/microsoft-outlook-2019.png" alt="Outlook"/>
+              <span>Outlook</span>
+            </div>
+            <div class="app-tile">
+              <img src="https://img.icons8.com/fluency/48/microsoft-forms-2019.png" alt="Forms"/>
+              <span>Forms</span>
+            </div>
+            <div class="app-tile">
+              <img src="https://img.icons8.com/fluency/48/microsoft-onenote-2019.png" alt="OneNote"/>
+              <span>OneNote</span>
+            </div>
+            <div class="app-tile all-apps">
+              <img src="https://img.icons8.com/ios-filled/50/plus-math.png" alt="All apps"/>
+              <span>All apps</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="user-container">
+        <div class="user-avatar" onclick="toggleAccountPopup(event)">
+          <img src="https://img.icons8.com/fluency/48/user-male-circle.png" alt="User" />
+        </div>
+        <div class="account-popup" id="accountPopup">
+          <div class="account-info">
+            <img src="https://img.icons8.com/fluency/48/user-male-circle.png" alt="User profile">
+            <div class="user-details">
+              <div class="user-name">Sahil Thorat</div>
+              <div class="user-email">sahil.thorat@company.com</div>
+            </div>
+          </div>
+          <div class="account-actions">
+            <a href="#" class="account-action">
+              <img src="https://img.icons8.com/material-outlined/24/settings.png" alt="Settings">
+              <span>Settings</span>
+            </a>
+            <a href="#" class="account-action">
+              <img src="https://img.icons8.com/material-outlined/24/exit.png" alt="Sign out">
+              <span>Sign out</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div class="app-section">
+      <div class="app-icon" onclick="togglePopup('excelPopup', event)">
+        <img src="https://img.icons8.com/fluency/48/microsoft-excel-2019.png"/><div>Excel</div><div class="arrow">▼</div>
+        <div class="popup" id="excelPopup">
+          <a href="#"><img src="https://img.icons8.com/material-outlined/24/plus-math.png" style="width: 16px; height: 16px; margin: 0;"/>New Spreadsheet</a>
+          <a href="#"><img src="https://img.icons8.com/fluency/48/microsoft-excel-2019.png" style="width: 16px; height: 16px; margin: 0;"/>Budget</a>
+          <a href="#"><img src="https://img.icons8.com/fluency/48/microsoft-excel-2019.png" style="width: 16px; height: 16px; margin: 0;"/>Marketing</a>
+        </div>
+      </div>
+      <div class="app-icon" onclick="togglePopup('wordPopup', event)">
+        <img src="https://img.icons8.com/fluency/48/microsoft-word-2019.png"/><div>Word</div><div class="arrow">▼</div>
+        <div class="popup" id="wordPopup">
+          <a href="#"><img src="https://img.icons8.com/material-outlined/24/plus-math.png" style="width: 16px; height: 16px; margin: 0;"/>New Document</a>
+          <a href="#"><img src="https://img.icons8.com/fluency/48/microsoft-word-2019.png" style="width: 16px; height: 16px; margin: 0;"/>Report</a>
+          <a href="#"><img src="https://img.icons8.com/fluency/48/microsoft-word-2019.png" style="width: 16px; height: 16px; margin: 0;"/>Notes</a>
+        </div>
+      </div>
+      <div class="app-icon" onclick="togglePopup('pptPopup', event)">
+        <img src="https://img.icons8.com/fluency/48/microsoft-powerpoint-2019.png"/><div>PowerPoint</div><div class="arrow">▼</div>
+        <div class="popup" id="pptPopup">
+          <a href="#"><img src="https://img.icons8.com/material-outlined/24/plus-math.png" style="width: 16px; height: 16px; margin: 0;"/>New Presentation</a>
+          <a href="#"><img src="https://img.icons8.com/fluency/48/microsoft-powerpoint-2019.png" style="width: 16px; height: 16px; margin: 0;"/>Pitch Deck</a>
+          <a href="#"><img src="https://img.icons8.com/fluency/48/microsoft-powerpoint-2019.png" style="width: 16px; height: 16px; margin: 0;"/>Monthly Report</a>
+        </div>
+      </div>
+      <div class="app-icon" onclick="togglePopup('outlookPopup', event)">
+        <img src="https://img.icons8.com/fluency/48/microsoft-outlook-2019.png"/><div>Outlook</div><div class="arrow">▼</div>
+        <div class="popup" id="outlookPopup">
+          <a href="#"><img src="https://img.icons8.com/material-outlined/24/mail.png" style="width: 16px; height: 16px; margin: 0;"/>Inbox</a>
+          <a href="#"><img src="https://img.icons8.com/material-outlined/24/edit-message.png" style="width: 16px; height: 16px; margin: 0;"/>Compose</a>
+          <a href="#"><img src="https://img.icons8.com/material-outlined/24/calendar.png" style="width: 16px; height: 16px; margin: 0;"/>Calendar</a>
+        </div>
+      </div>
+      <div class="app-icon" onclick="togglePopup('teamsPopup', event)">
+        <img src="https://img.icons8.com/fluency/48/microsoft-teams-2019.png"/><div>Teams</div><div class="arrow">▼</div>
+        <div class="popup" id="teamsPopup">
+          <a href="#"><img src="https://img.icons8.com/material-outlined/24/meeting-room.png" style="width: 16px; height: 16px; margin: 0;"/>Meetings</a>
+          <a href="#"><img src="https://img.icons8.com/material-outlined/24/chat.png" style="width: 16px; height: 16px; margin: 0;"/>Chat</a>
+        </div>
+      </div>
+      <div class="app-icon" onclick="togglePopup('canvasPopup', event)">
+        <img src="https://img.icons8.com/fluency/48/canvas-student.png"/><div>Canvas</div><div class="arrow">▼</div>
+        <div class="popup" id="canvasPopup">
+          <a href="#"><img src="https://img.icons8.com/material-outlined/24/classroom.png" style="width: 16px; height: 16px; margin: 0;"/>Courses</a>
+          <a href="#"><img src="https://img.icons8.com/material-outlined/24/task.png" style="width: 16px; height: 16px; margin: 0;"/>Assignments</a>
+          <a href="#"><img src="https://img.icons8.com/material-outlined/24/test-partial-passed.png" style="width: 16px; height: 16px; margin: 0;"/>Grades</a>
+        </div>
+      </div>
+      <div class="app-icon" onclick="togglePopup('gradesPopup', event)">
+        <img src="https://img.icons8.com/fluency/48/report-card.png"/><div>Grades</div><div class="arrow">▼</div>
+        <div class="popup" id="gradesPopup">
+          <a href="#"><img src="https://img.icons8.com/fluency/48/report-card.png" style="width: 16px; height: 16px; margin: 0;"/>Current Grades</a>
+          <a href="#"><img src="https://img.icons8.com/material-outlined/24/combo-chart.png" style="width: 16px; height: 16px; margin: 0;"/>Progress</a>
+          <a href="#"><img src="https://img.icons8.com/material-outlined/24/certificate.png" style="width: 16px; height: 16px; margin: 0;"/>Achievements</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Recommended</h2>
+      <div class="recommended">
+        <div class="file-box">
+          <div class="file-header" style="background-color: #217346;">
+            <img src="https://img.icons8.com/fluency/48/microsoft-excel-2019.png" class="file-icon"/>
+          </div>
+          <div class="file-info">
+            <div class="file-name">Q1 Financial Report.xlsx</div>
+            <div class="file-meta">
+              <div>Edited Apr 2</div>
+              <div>You</div>
+            </div>
+          </div>
+        </div>
+        <div class="file-box">
+          <div class="file-header" style="background-color: #2b579a;">
+            <img src="https://img.icons8.com/fluency/48/microsoft-word-2019.png" class="file-icon"/>
+          </div>
+          <div class="file-info">
+            <div class="file-name">Project Proposal.docx</div>
+            <div class="file-meta">
+              <div>Edited Mar 29</div>
+              <div>Shared</div>
+            </div>
+          </div>
+        </div>
+        <div class="file-box">
+          <div class="file-header" style="background-color: #b7472a;">
+            <img src="https://img.icons8.com/fluency/48/microsoft-powerpoint-2019.png" class="file-icon"/>
+          </div>
+          <div class="file-info">
+            <div class="file-name">Client Presentation.pptx</div>
+            <div class="file-meta">
+              <div>Edited Mar 27</div>
+              <div>You</div>
+            </div>
+          </div>
+        </div>
+        <div class="file-box">
+          <div class="file-header" style="background-color: #0078d4;">
+            <img src="https://img.icons8.com/fluency/48/microsoft-teams-2019.png" class="file-icon"/>
+          </div>
+          <div class="file-info">
+            <div class="file-name">Team Meeting Notes</div>
+            <div class="file-meta">
+              <div>Edited Yesterday</div>
+              <div>Team</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Widgets</h2>
+      <div class="widgets">
+        <div class="widget-box calendar">
+          <div class="widget-header">
+            <div class="widget-title">
+              <img src="https://img.icons8.com/color/48/calendar.png"/>
+              <div>Calendar</div>
+            </div>
+            <span class="badge">Today</span>
+          </div>
+          <div class="widget-content">
+            <div class="meeting-item">
+              <div class="meeting-time">2:00 PM</div>
+              <div>Product Team Standup</div>
+            </div>
+            <div class="meeting-item">
+              <div class="meeting-time">3:30 PM</div>
+              <div>Client Presentation</div>
+            </div>
+            <div class="meeting-item">
+              <div class="meeting-time">5:00 PM</div>
+              <div>Project Review</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="widget-box email">
+          <div class="widget-header">
+            <div class="widget-title">
+              <img src="https://img.icons8.com/fluency/48/microsoft-outlook-2019.png"/>
+              <div>Inbox</div>
+            </div>
+            <span class="badge">3 new</span>
+          </div>
+          <div class="widget-content">
+            <div class="email-item">
+              <div class="email-time">11:32 AM</div>
+              <div>Sarah Chen - Project Update</div>
+            </div>
+            <div class="email-item">
+              <div class="email-time">10:15 AM</div>
+              <div>Dev Team - Sprint Review</div>
+            </div>
+            <div class="email-item">
+              <div class="email-time">9:04 AM</div>
+              <div>John Smith - Budget Approval</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="widget-box add">
+          <img src="https://img.icons8.com/ios-glyphs/30/000000/plus-math.png" style="width: 24px; height: 24px; margin-bottom: 8px;"/>
+          <div>Add Widget</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePopup(id, event) {
+      document.querySelectorAll('.popup').forEach(p => p.style.display = 'none');
+      const popup = document.getElementById(id);
+      if (popup) popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+      event.stopPropagation();
+    }
+
+    function toggleAccountPopup(event) {
+      const popup = document.getElementById('accountPopup');
+      popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+      event.stopPropagation();
+    }
+
+    function toggleAppsPopup(event) {
+      const popup = document.getElementById('appsPopup');
+      popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+      event.stopPropagation();
+    }
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.app-icon')) document.querySelectorAll('.popup').forEach(p => p.style.display = 'none');
+      if (!e.target.closest('.user-container') && !e.target.closest('.apps-container')) {
+        document.getElementById('accountPopup').style.display = 'none';
+        document.getElementById('appsPopup').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
